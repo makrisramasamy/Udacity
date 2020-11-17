@@ -1,7 +1,7 @@
 provider "azurerm" {
   version = ">=2.4.0"
-  subscription_id = "56a41315-78dc-492c-87ee-f8771705b3ad"
-  tenant_id = "9ef4f69c-e182-4897-abb7-acda150149f8"
+  subscription_id = "xxxxxxx-xxxxxxxxxxxxx"
+  tenant_id = "9xxxx-xxxxxxx-xxxxxx"
 
   features {}
   
