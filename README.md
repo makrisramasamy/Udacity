@@ -35,6 +35,29 @@ Azure Policy
 
 Azure policy to enforce  tagging rules - To avoid scenario of resources being deployed to subscription in absence of tags.
 
+## Expected Output
+
+If the input count is 3 , following resources will be created 
+
+- Resource Group : 1
+- Virtual Machine : 3
+- NIC -3 
+- Availability set -3
+- public IP - 1
+- Vnet  -
+- Network Security Group -1
+- Subnet -1
+_ Load Balancer -1
+- Managed Disk -1
+
+## How variables can be customized
+
+Location can be provided as a user input
+Establish a systematic naming convention for all resources by adding a suffix in main.tf and utilising a common prefix as user input.
+
+
+- 
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
