@@ -1,7 +1,7 @@
 provider "azurerm" {
   version = ">=2.4.0"
-  subscription_id = "xxxxxxx-xxxxxxxxxxxxx"
-  tenant_id = "9xxxx-xxxxxxx-xxxxxx"
+  subscription_id = ""
+  tenant_id = ""
 
   features {}
   
@@ -11,12 +11,12 @@ data "azurerm_resource_group" "image" {
 }
 
 data "azurerm_image" "image" {
-  name                = "myPackerImagenew"
+  name                = var.image
   resource_group_name = "${data.azurerm_resource_group.image.name}"
 }
 
 resource "azurerm_resource_group" "main" {
-  name     = "mani-resources"
+  name     = "${var.rgname}-rg"
   location = "east us"
 }
 
@@ -94,18 +94,21 @@ resource "azurerm_subnet" "internal" {
 }
 
 resource "azurerm_network_interface" "main" {
-  name                = "new-nic"
+
+ count = "${var.noofvm}"
+  name                = "new-nic-${count.index}"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
 
   ip_configuration {
-    name                          = "internal"
+    name                          = "internal-${count.index}"
     subnet_id                     = azurerm_subnet.internal.id
     private_ip_address_allocation = "Dynamic"
   }
 }
 
 resource "azurerm_lb" "example" {
+  
   name                = "TestLoadBalancer"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
@@ -123,7 +126,9 @@ resource "azurerm_lb_backend_address_pool" "example" {
 }
 
 resource "azurerm_availability_set" "example" {
-  name                = "example-aset"
+
+  count = "${var.noofvm}"
+  name                = "example-aset-${count.index}"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
 
@@ -132,30 +137,54 @@ resource "azurerm_availability_set" "example" {
   }
 }
 
-resource "azurerm_linux_virtual_machine" "example" {
-  name                = "example-machine"
+resource "azurerm_virtual_machine" "example" {
+
+  count = "${var.noofvm}"
+
+  name                = "example-machine-${count.index}"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
-  size                = "Standard_F2"
-  admin_username      = "adminuser"
-  network_interface_ids = [
-    azurerm_network_interface.main.id,
-  ]
+  vm_size                = "Standard_F2"
+  network_interface_ids = ["${element(azurerm_network_interface.main.*.id, count.index)}"]
+  
 
- storage_profile_image_reference {
+
+ storage_image_reference {
     id="${data.azurerm_image.image.id}"
   }
 
   
-  os_disk {
-
+  storage_os_disk {
+    
+    name = "disk--${count.index}"
     caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
     create_option     = "FromImage"
+    managed_disk_type = "Standard_LRS"
     
      }
-
-  
+os_profile {
+    computer_name  = "hostname"
+    admin_username = "testadmin"
+    admin_password = "Password@123!"
+  }
+  os_profile_linux_config {
+    disable_password_authentication = false
+  }
 }
+
+  resource "azurerm_managed_disk" "example" {
+  name                 = "acctestmd"
+  location             = "east US "
+  resource_group_name  = azurerm_resource_group.main.name
+  storage_account_type = "Standard_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = "1"
+
+  tags = {
+    environment = "staging"
+  }
+  }
+  
+
 
 
